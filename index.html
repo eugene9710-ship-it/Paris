@@ -3,22 +3,957 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paris Trip Dashboard — 다운로드</title>
-    <meta http-equiv="refresh" content="1;url=paris-trip-dashboard.html">
+    <title>프랑스 여행 올인원 대시보드 · 파리 · 니스</title>
+    <!-- 완성본 v1 · 단일 HTML · 배포: paris-trip-dashboard.html 또는 index.html(동일 복사) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: system-ui, sans-serif; max-width: 560px; margin: 3rem auto; padding: 1rem; line-height: 1.6; }
-        a.btn { display: inline-block; margin: 0.5rem 0.5rem 0.5rem 0; padding: 0.75rem 1.25rem; background: #002395; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 700; }
-        a.btn.alt { background: #ED2939; }
-        code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+        :root { --primary: #002395; --accent: #ED2939; --bg: #f1f5f9; --card: #ffffff; }
+        body { font-family: 'Inter', 'Noto Sans KR', sans-serif; background: var(--bg); color: #1e293b; margin: 0; }
+        header { background: var(--card); padding: 1.25rem 1.5rem 1.5rem; text-align: center; border-bottom: 3px solid var(--primary); }
+        header h1 { margin: 0; font-size: 1.35rem; }
+        .city-switcher { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
+        .city-switcher .city-btn { width: auto; min-width: 7.5rem; padding: 0.55rem 1.5rem; font-size: 0.95rem; border-radius: 999px; border: 2px solid #e2e8f0; background: #fff; color: var(--primary); font-weight: 700; }
+        .city-switcher .city-btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
+        .city-switcher .city-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        body.theme-nice { --primary: #0077b6; --accent: #e85d04; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; display: flex; flex-direction: column; gap: 2rem; }
+        .lower-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
+        @media (max-width: 900px) { .lower-grid { grid-template-columns: 1fr; } }
+        .card { background: var(--card); padding: 1.5rem; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; height: fit-content; }
+        .section-block { padding: 0; overflow: hidden; }
+        .section-header { margin: 0; padding: 1rem 1.25rem; background: var(--primary); color: #fff; text-align: center; font-size: 1.05rem; font-weight: 700; letter-spacing: 0.02em; border-radius: 16px 16px 0 0; }
+        .section-body { padding: 1.5rem; }
+        .section-subtitle { margin: 0 0 1rem; font-size: 0.9rem; font-weight: 700; color: var(--primary); }
+        h3 { margin-top: 0; display: flex; align-items: center; gap: 8px; color: var(--primary); }
+        input, button, select { width: 100%; padding: 0.8rem; border-radius: 10px; border: 1px solid #ddd; font-size: 1rem; box-sizing: border-box; }
+        button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { filter: brightness(1.2); transform: translateY(-1px); }
+        .spot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; max-height: 520px; overflow-y: auto; padding-right: 5px; }
+        .spot-card { border-radius: 12px; overflow: hidden; background: #fff; border: 1px solid #eee; transition: 0.3s; }
+        .spot-card:hover { box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
+        .spot-img { width: 100%; height: 110px; object-fit: cover; background: linear-gradient(135deg, #e2e8f0, #cbd5e1); cursor: pointer; display: block; }
+        .spot-img:hover { filter: brightness(1.05); }
+        .spot-info { padding: 8px 8px 4px; font-size: 0.85rem; font-weight: 600; text-align: center; }
+        .spot-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 8px 8px; }
+        .spot-actions .spot-btn { padding: 0.45rem 0.35rem; font-size: 0.72rem; font-weight: 600; }
+        .spot-actions .spot-btn-add { background: var(--accent); }
+        .spot-actions .spot-btn-search { background: #475569; }
+        .milestone-scroll { overflow-x: auto; overflow-y: hidden; padding: 0.25rem 0 0.75rem; -webkit-overflow-scrolling: touch; }
+        .milestone-track { display: flex; flex-direction: row; align-items: stretch; flex-wrap: nowrap; min-width: min-content; }
+        .milestone-node { flex: 0 0 auto; width: 148px; background: #f8fafc; padding: 0.85rem 0.75rem; border-radius: 12px; border-top: 4px solid var(--primary); position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+        .milestone-node .milestone-time { display: block; font-size: 0.72rem; color: #64748b; margin-bottom: 0.35rem; }
+        .milestone-node .milestone-title { display: block; font-size: 0.88rem; line-height: 1.3; margin-bottom: 0.35rem; word-break: keep-all; }
+        .milestone-node .milestone-loc { display: block; font-size: 0.72rem; color: #64748b; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .milestone-del { position: absolute; right: 6px; top: 6px; color: var(--accent); cursor: pointer; font-weight: bold; border: none; background: none; width: auto; padding: 2px 6px; font-size: 0.75rem; line-height: 1; }
+        .milestone-connector { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 52px; padding: 0 0.25rem; align-self: center; }
+        .milestone-arrow { font-size: 1.35rem; color: var(--primary); font-weight: 700; line-height: 1; }
+        .milestone-leg-link { font-size: 0.65rem; color: #1d4ed8; text-decoration: none; margin-top: 0.2rem; text-align: center; max-width: 72px; line-height: 1.2; }
+        .milestone-leg-link:hover { text-decoration: underline; }
+        .milestone-empty { margin: 0; padding: 1rem; text-align: center; width: 100%; }
+        .chat-fab { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 1000; width: 56px; height: 56px; border-radius: 50%; font-size: 1.5rem; box-shadow: 0 8px 24px rgba(0,35,149,0.35); display: flex; align-items: center; justify-content: center; padding: 0; }
+        .chat-fab.open { background: #475569; }
+        .chat-panel { position: fixed; right: 1.25rem; bottom: 5.5rem; z-index: 999; width: min(380px, calc(100vw - 2rem)); max-height: min(520px, calc(100vh - 7rem)); background: var(--card); border-radius: 16px; box-shadow: 0 16px 48px rgba(0,0,0,0.18); border: 1px solid #e2e8f0; display: flex; flex-direction: column; overflow: hidden; }
+        .chat-panel[hidden] { display: none !important; }
+        .chat-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1rem; background: var(--primary); color: #fff; }
+        .chat-panel-header h3 { margin: 0; font-size: 0.95rem; font-weight: 700; color: #fff; }
+        .chat-panel-close { width: auto; padding: 0.35rem 0.6rem; background: rgba(255,255,255,0.2); font-size: 0.85rem; }
+        .chat-panel-close:hover { background: rgba(255,255,255,0.3); }
+        .chat-panel-body { padding: 1rem; overflow-y: auto; flex: 1; display: flex; flex-direction: column; }
+        .chat-panel-body .chat-box { height: 240px; flex-shrink: 0; }
+        .chat-box { height: 350px; overflow-y: auto; background: #f8fafc; border: 1px solid #e2e8f0; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 14px; border-radius: 15px; max-width: 85%; font-size: 0.9rem; line-height: 1.5; }
+        .msg.user { background: var(--primary); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .msg.ai { background: white; border: 1px solid #e2e8f0; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .api-key-input { font-size: 0.7rem; margin-bottom: 10px; border-color: var(--accent); }
+        .model-row { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 10px; }
+        .model-row select { font-size: 0.85rem; }
+        .hint { font-size: 0.75rem; color: #64748b; margin-top: 4px; }
+        .api-key-row { display: flex; gap: 8px; align-items: stretch; margin-bottom: 10px; }
+        .api-key-row input { flex: 1; margin-bottom: 0; }
+        .api-key-row button.secondary { background: #e2e8f0; color: #334155; font-size: 0.8rem; padding: 0.5rem 0.75rem; width: auto; min-width: 7rem; }
+        .api-key-row button.secondary:hover { filter: brightness(0.97); }
+        .place-wrap { position: relative; margin-bottom: 10px; }
+        .place-results { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; max-height: 220px; overflow-y: auto; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.12); margin-top: 4px; }
+        .place-results.open { display: block; }
+        .place-item { padding: 0.65rem 0.85rem; cursor: pointer; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; text-align: left; }
+        .place-item:hover { background: #f8fafc; }
+        .place-item small { display: block; color: #64748b; font-size: 0.72rem; margin-top: 2px; }
+        .eatery-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
+        .eatery-filters button.filter-chip { width: auto; padding: 0.45rem 0.9rem; font-size: 0.8rem; background: #f1f5f9; color: #334155; font-weight: 600; border: 1px solid #e2e8f0; }
+        .eatery-filters button.filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .eatery-list { display: grid; gap: 12px; max-height: 520px; overflow-y: auto; padding-right: 5px; }
+        .eatery-card { display: grid; grid-template-columns: 100px 1fr; gap: 12px; padding: 0.75rem; border-radius: 12px; border: 1px solid #e2e8f0; background: #fafafa; align-items: start; }
+        @media (max-width: 480px) { .eatery-card { grid-template-columns: 1fr; } }
+        .eatery-card .eatery-img { width: 100%; height: 88px; object-fit: cover; border-radius: 8px; background: #e2e8f0; cursor: pointer; display: block; }
+        .eatery-card .eatery-img:hover { filter: brightness(1.05); }
+        .eatery-card .cat { display: inline-block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 8px; border-radius: 999px; background: #dbeafe; color: #1e40af; margin-bottom: 6px; }
+        .eatery-card .cat.bar { background: #fce7f3; color: #9d174d; }
+        .eatery-card .cat.cafe { background: #fef3c7; color: #92400e; }
+        .eatery-card strong { font-size: 0.95rem; }
+        .eatery-card p { margin: 6px 0 0; font-size: 0.8rem; color: #475569; line-height: 1.45; }
+        .eatery-card .rank-badge { display: inline-block; font-size: 0.68rem; font-weight: 700; color: #b45309; background: #fef3c7; padding: 2px 8px; border-radius: 6px; margin-bottom: 6px; }
+        .date-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; align-items: center; }
+        .date-tabs button.date-chip { width: auto; padding: 0.45rem 0.85rem; font-size: 0.8rem; background: #f1f5f9; color: #334155; font-weight: 600; border: 1px solid #e2e8f0; }
+        .date-tabs button.date-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .date-tabs .tab-label { font-size: 0.78rem; color: #64748b; width: 100%; flex-basis: 100%; margin-bottom: 2px; }
+        @media (min-width: 600px) { .date-tabs .tab-label { width: auto; flex-basis: auto; margin-right: 8px; margin-bottom: 0; } }
+        .stack-gap { display: flex; flex-direction: column; gap: 0.75rem; }
+        .timeline-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
+        .timeline-input { padding-right: 1.5rem; border-right: 1px solid #e2e8f0; }
+        .timeline-output { min-height: 10rem; }
+        .timeline-output .tab-label { display: block; margin-bottom: 0.5rem; font-size: 0.78rem; color: #64748b; }
+        @media (max-width: 900px) {
+            .timeline-layout { grid-template-columns: 1fr; }
+            .timeline-input { padding-right: 0; padding-bottom: 1.5rem; border-right: none; border-bottom: 1px solid #e2e8f0; }
+            .timeline-output { max-height: none; }
+        }
     </style>
 </head>
 <body>
-    <h1>🇫🇷 Paris Trip Dashboard</h1>
-    <p>완성본은 <strong>단일 HTML 파일</strong> <code>paris-trip-dashboard.html</code> 입니다. (내용 = 배포용 <code>index.html</code>과 동일)</p>
-    <p>
-        <a class="btn alt" href="paris-trip-dashboard.html" download="index.html">📥 index.html 로 다운로드</a>
-        <a class="btn" href="paris-trip-dashboard.html">🌐 대시보드 열기</a>
-    </p>
-    <p style="font-size:0.85rem;color:#64748b;">IDE에서 <code>index.html</code> 탭을 닫은 뒤, Finder에서 <code>paris-trip-dashboard.html</code>을 <code>index.html</code>로 복사·이름 변경하면 Vercel 루트(/)에 바로 배포됩니다.</p>
+    <header>
+        <h1 id="headerTitle">🇫🇷 파리 여행 대시보드</h1>
+        <div class="city-switcher" role="tablist" aria-label="도시 선택">
+            <button type="button" class="city-btn active" data-city="paris" id="cityBtnParis">파리</button>
+            <button type="button" class="city-btn" data-city="nice" id="cityBtnNice">니스</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card section-block" id="timelineArea">
+            <h2 class="section-header">📅 나의 여행 타임라인</h2>
+            <div class="section-body">
+            <div class="timeline-layout">
+                <div class="timeline-input">
+            <h4 class="section-subtitle">일정입력</h4>
+            <p class="hint" style="margin-top:0;">장소는 OpenStreetMap 검색으로 선택합니다. 일정은 브라우저에 저장됩니다.</p>
+
+            <form id="planForm">
+                <div style="display:grid; grid-template-columns: 1fr 100px; gap:10px; margin-bottom:10px;">
+                    <input type="date" id="pDate" required>
+                    <select id="pHour" required title="시간(시 단위)"></select>
+                </div>
+                <input type="text" id="pTitle" placeholder="일정명" required style="margin-bottom:10px;">
+                <label for="pLocSearch" id="locSearchLabel" style="font-size:0.8rem;color:#64748b;">장소 검색 (파리)</label>
+                <div class="place-wrap">
+                    <input type="text" id="pLocSearch" placeholder="예: 루브르, Café de Flore…" autocomplete="off">
+                    <input type="hidden" id="pLat">
+                    <input type="hidden" id="pLon">
+                    <input type="hidden" id="pLocLabel">
+                    <div id="pLocResults" class="place-results" role="listbox"></div>
+                </div>
+                <button type="submit" style="margin-top:10px; background:var(--accent);">타임라인에 추가</button>
+            </form>
+                </div>
+                <div class="timeline-output">
+                    <h4 class="section-subtitle">타임라인</h4>
+                    <span class="tab-label">날짜별 보기</span>
+                    <div class="date-tabs" id="dateTabs"></div>
+                    <div id="timelineList" class="milestone-scroll"></div>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <div class="lower-grid">
+            <div class="card section-block">
+                <h2 class="section-header" id="spotSectionHeader">🗺️ 파리 관광지 TOP 30</h2>
+                <div class="section-body">
+                <div id="spotGrid" class="spot-grid"></div>
+                </div>
+            </div>
+            <div class="card section-block">
+                <h2 class="section-header" id="eaterySectionHeader">🍽️ 파리 맛집 TOP 10</h2>
+                <div class="section-body">
+                <div class="eatery-filters" id="eateryFilters"></div>
+                <div id="eateryList" class="eatery-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" id="chatFab" class="chat-fab" aria-label="AI 여행 가이드" aria-expanded="false">💬</button>
+    <div id="aiChatPanel" class="chat-panel" hidden>
+        <div class="chat-panel-header">
+            <h3 id="chatPanelTitle">💬 파리 AI 여행 가이드</h3>
+            <button type="button" id="chatPanelClose" class="chat-panel-close" aria-label="닫기">✕</button>
+        </div>
+        <div class="chat-panel-body">
+            <div class="api-key-row">
+                <input type="password" id="apiKey" class="api-key-input" autocomplete="off" placeholder="Gemini API 키 (입력 후 블러 시 저장)">
+                <button type="button" class="secondary" id="clearApiKeyBtn" title="저장된 키 삭제">키 지우기</button>
+            </div>
+            <div class="model-row">
+                <label for="modelSelect" style="font-size:0.8rem;color:#64748b;">모델 (오류 시 다른 모델 선택)</label>
+                <select id="modelSelect">
+                    <option value="gemini-2.0-flash" selected>gemini-2.0-flash</option>
+                    <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                    <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                    <option value="gemini-1.5-flash-8b">gemini-1.5-flash-8b</option>
+                </select>
+            </div>
+            <p class="hint">API 키는 이 브라우저 <strong>localStorage</strong>에만 저장됩니다.</p>
+            <div id="chatHist" class="chat-box">
+                <div class="msg ai" id="chatWelcome">봉쥬르! 파리 여행에 대해 무엇이든 물어보세요. (일정 추천, 맛집, 주의사항 등)</div>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <input type="text" id="chatInput" placeholder="질문을 입력하세요...">
+                <button type="button" onclick="askAI()" style="width:80px;">전송</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const NOMINATIM = 'https://nominatim.openstreetmap.org/search';
+        const GEMINI_API_KEY_STORAGE = 'paris_gemini_api_key';
+        const CITY_STORAGE_KEY = 'trip_dashboard_city';
+        const EIFFEL_FALLBACK_IMG = 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/320px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg';
+
+        const CITIES = {
+            paris: {
+                label: '파리',
+                headerTitle: '🇫🇷 파리 여행 대시보드',
+                nominatimViewbox: '2.224,48.815,2.469,48.902',
+                searchSuffix: 'Paris France',
+                naverSuffix: '파리',
+                plansKey: 'paris_plans_v12',
+                timelineViewKey: 'paris_timeline_view_date',
+                geminiContext: '파리',
+                spotHeader: '🗺️ 파리 관광지 TOP 30',
+                eateryHeader: '🍽️ 파리 맛집 TOP 10',
+                chatTitle: '💬 파리 AI 여행 가이드',
+                chatWelcome: '봉쥬르! 파리 여행에 대해 무엇이든 물어보세요. (일정 추천, 맛집, 주의사항 등)',
+                locSearchLabel: '장소 검색 (파리)',
+                locPlaceholder: '예: 루브르, Café de Flore…',
+                themeClass: '',
+                spots: [
+            { name: "에펠탑", wikiTitle: "Eiffel_Tower", nom: "Tour Eiffel, Paris" },
+            { name: "루브르 박물관", wikiTitle: "Louvre", nom: "Musée du Louvre, Paris" },
+            { name: "개선문", wikiTitle: "Arc_de_Triomphe", nom: "Arc de Triomphe, Paris" },
+            { name: "몽마르뜨 언덕", wikiTitle: "Montmartre", nom: "Montmartre, Paris" },
+            { name: "노트르담 대성당", wikiTitle: "Notre-Dame_de_Paris", nom: "Notre-Dame de Paris" },
+            { name: "오르세 미술관", wikiTitle: "Musée_d'Orsay", nom: "Musée d'Orsay, Paris" },
+            { name: "베르사유 궁전", wikiTitle: "Palace_of_Versailles", nom: "Château de Versailles" },
+            { name: "퐁피두 센터", wikiTitle: "Centre_Georges_Pompidou", nom: "Centre Pompidou, Paris" },
+            { name: "튈르리 정원", wikiTitle: "Tuileries_Garden", nom: "Jardin des Tuileries, Paris" },
+            { name: "샹젤리제 거리", wikiTitle: "Champs-Élysées", nom: "Avenue des Champs-Élysées, Paris" },
+            { name: "생트 샤펠", wikiTitle: "Sainte-Chapelle", nom: "Sainte-Chapelle, Paris" },
+            { name: "바스티유 광장", wikiTitle: "Place_de_la_Bastille", nom: "Place de la Bastille, Paris" },
+            { name: "뤽상부르 공원", wikiTitle: "Jardin_du_Luxembourg", nom: "Jardin du Luxembourg, Paris" },
+            { name: "판테온", wikiTitle: "Panthéon", nom: "Panthéon, Paris" },
+            { name: "오페라 가르니에", wikiTitle: "Palais_Garnier", nom: "Opéra Garnier, Paris" },
+            { name: "피카소 미술관", wikiTitle: "Musée_Picasso", nom: "Musée Picasso, Paris" },
+            { name: "로댕 미술관", wikiTitle: "Musée_Rodin", nom: "Musée Rodin, Paris" },
+            { name: "센 강 크루즈", wikiTitle: "Seine", nom: "Pont Neuf, Paris" },
+            { name: "지베르니 (모네 정원)", wikiTitle: "Giverny", nom: "Fondation Claude Monet, Giverny" },
+            { name: "디즈니랜드 파리", wikiTitle: "Disneyland_Paris", nom: "Disneyland Paris" },
+            { name: "라데팡스", wikiTitle: "La_Défense", nom: "La Défense, Puteaux" },
+            { name: "마레 지구", wikiTitle: "Le_Marais", nom: "Le Marais, Paris" },
+            { name: "셰익스피어 앤 컴퍼니", wikiTitle: "Shakespeare_and_Company", nom: "Shakespeare and Company, Paris" },
+            { name: "쁘띠 팔레", wikiTitle: "Petit_Palais", nom: "Petit Palais, Paris" },
+            { name: "그레뱅 뮤지엄", wikiTitle: "Musée_Grévin", nom: "Musée Grévin, Paris" },
+            { name: "카타콤", wikiTitle: "Catacombs_of_Paris", nom: "Catacombes de Paris" },
+            { name: "몽파르나스 타워", wikiTitle: "Tour_Montparnasse", nom: "Tour Montparnasse, Paris" },
+            { name: "라파예트 백화점", wikiTitle: "Galeries_Lafayette", nom: "Galeries Lafayette Haussmann, Paris" },
+            { name: "생 마르탱 운하", wikiTitle: "Canal_Saint-Martin", nom: "Canal Saint-Martin, Paris" },
+            { name: "뱅센 숲", wikiTitle: "Bois_de_Vincennes", nom: "Bois de Vincennes, Paris" }
+                ],
+                eateries: [
+                    { rank: 1, nameKo: "앙젤리나 (리볼리)", nameEn: "Angelina Paris", wikiTitle: "Angelina_(Paris)", cat: "cafe", naverQuery: "앙젤리나 파리", note: "몽블랑 핫초콜릿·디저트. 네이버·인스타 언급 최상위권." },
+                    { rank: 2, nameKo: "카페 드 플로르", nameEn: "Café de Flore", wikiTitle: "Café_de_Flore", cat: "cafe", naverQuery: "카페 드 플로르 파리", note: "생제르맹 명소. 검색·후기 볼륨 상위." },
+                    { rank: 3, nameKo: "라두레 (샹젤리제)", nameEn: "Ladurée Champs-Élysées", wikiTitle: "Ladurée", cat: "cafe", naverQuery: "라두레 파리 샹젤리제", note: "마카롱 대표 브랜드. 한국 관광객 검색 다수." },
+                    { rank: 4, nameKo: "부용 샤르티에", nameEn: "Bouillon Chartier", wikiTitle: "Chartier_(restaurant)", cat: "restaurant", naverQuery: "부용 차르티에 파리", note: "가성비 부용. 블로그·검색 노출 매우 높음." },
+                    { rank: 5, nameKo: "팔라펠 라즈 뒤 팔라펠", nameEn: "L'As du Fallafel", wikiTitle: "L'As_du_Fallafel", cat: "restaurant", naverQuery: "팔라펠 파리 마레", note: "마레 팔라펠 대명사. 한국 여행자 필수 코스." },
+                    { rank: 6, nameKo: "겔러리 라파예트 구루메", nameEn: "Galeries Lafayette Le Gourmet", wikiTitle: "Galeries_Lafayette", cat: "restaurant", naverQuery: "겔러리 라파예트 구루메", note: "백화점 푸드홀. 쇼핑+식사 검색량 큼." },
+                    { rank: 7, nameKo: "쥘 베른 (에펠탑)", nameEn: "Le Jules Verne", wikiTitle: "Jules_Verne_(restaurant)", cat: "restaurant", naverQuery: "쥘베른 에펠탑 레스토랑", note: "미슐랭·랜드마크 식사. 검색·문의 많음." },
+                    { rank: 8, nameKo: "세빔", nameEn: "Septime", wikiTitle: "Septime_(restaurant)", cat: "restaurant", naverQuery: "세빔 파리 미슐랭", note: "현대 프렌치. 예약·후기 검색 상위." },
+                    { rank: 9, nameKo: "막시무 드 파리", nameEn: "Maxim's Paris", wikiTitle: "Maxim's", cat: "restaurant", naverQuery: "막시무 드 파리", note: "파리 상징 레스토랑. 관광 검색 고전." },
+                    { rank: 10, nameKo: "브라세리 립", nameEn: "Brasserie Lipp", wikiTitle: "Brasserie_Lipp", cat: "restaurant", naverQuery: "브라세리 립 파리", note: "생제르맹 클래식. 언급·검색 꾸준함." }
+                ]
+            },
+            nice: {
+                label: '니스',
+                headerTitle: '🌊 니스 여행 대시보드',
+                nominatimViewbox: '7.18,43.68,7.32,43.75',
+                searchSuffix: 'Nice France',
+                naverSuffix: '니스',
+                plansKey: 'nice_plans_v1',
+                timelineViewKey: 'nice_timeline_view_date',
+                geminiContext: '니스',
+                spotHeader: '🗺️ 니스 관광지 TOP 28',
+                eateryHeader: '🍽️ 니스 맛집 TOP 10',
+                chatTitle: '💬 니스 AI 여행 가이드',
+                chatWelcome: 'Bonjour! 니스·코트다쥐르 여행에 대해 무엇이든 물어보세요. (일정, 소카, 올드타운, 주의사항 등)',
+                locSearchLabel: '장소 검색 (니스)',
+                locPlaceholder: '예: 앙글레, 꾸르 살레야…',
+                themeClass: 'theme-nice',
+                spots: [
+                    { name: "앙글레 산책로", wikiTitle: "Promenade_des_Anglais", nom: "Promenade des Anglais, Nice", lat: 43.6947, lon: 7.2650 },
+                    { name: "니스 올드타운", wikiTitle: "Vieux-Nice", nom: "Vieux-Nice, Nice", lat: 43.6961, lon: 7.2756 },
+                    { name: "성 언덕 (콜린)", wikiTitle: "Castle_Hill,_Nice", nom: "Colline du Château, Nice", lat: 43.6959, lon: 7.2795 },
+                    { name: "꾸르 살레야", wikiTitle: "Cours_Saleya", nom: "Cours Saleya, Nice", lat: 43.6956, lon: 7.2774 },
+                    { name: "마시스 미술관", wikiTitle: "Musée_Matisse", nom: "Musée Matisse, Nice", lat: 43.7194, lon: 7.2761 },
+                    { name: "샤갈 미술관", wikiTitle: "Musée_Marc_Chagall", nom: "Musée Marc Chagall, Nice", lat: 43.7094, lon: 7.2680 },
+                    { name: "마세나 광장", wikiTitle: "Place_Masséna", nom: "Place Masséna, Nice", lat: 43.6975, lon: 7.2700 },
+                    { name: "니스 항구", wikiTitle: "Port_of_Nice", nom: "Port Lympia, Nice", lat: 43.6950, lon: 7.2845 },
+                    { name: "러시아 정교회", wikiTitle: "St_Nicholas_Orthodox_Cathedral,_Nice", nom: "Cathédrale Saint-Nicolas, Nice", lat: 43.7030, lon: 7.2655 },
+                    { name: "MAMAC 현대미술관", wikiTitle: "Musée_d'Art_Moderne_et_d'Art_Contemporain", nom: "MAMAC, Nice", lat: 43.7003, lon: 7.2770 },
+                    { name: "알베르 1세 공원", wikiTitle: "Jardin_Albert_Ier", nom: "Jardin Albert Ier, Nice", lat: 43.6988, lon: 7.2685 },
+                    { name: "시미에즈 수도원", wikiTitle: "Monastère_de_Cimiez", nom: "Monastère de Cimiez, Nice", lat: 43.7198, lon: 7.2775 },
+                    { name: "시미에즈 로마 원형극장", wikiTitle: "Cimiez", nom: "Arènes de Cimiez, Nice", lat: 43.7205, lon: 7.2788 },
+                    { name: "니스 대성당", wikiTitle: "Nice_Cathedral", nom: "Cathédrale Sainte-Réparate, Nice", lat: 43.6968, lon: 7.2762 },
+                    { name: "가리발디 광장", wikiTitle: "Place_Garibaldi", nom: "Place Garibaldi, Nice", lat: 43.7015, lon: 7.2810 },
+                    { name: "네그레스코 호텔", wikiTitle: "Hotel_Negresco", nom: "Hôtel Negresco, Nice", lat: 43.6942, lon: 7.2585 },
+                    { name: "몽 보롱", wikiTitle: "Mont_Boron", nom: "Mont Boron, Nice", lat: 43.7100, lon: 7.2950 },
+                    { name: "카페 드 투린", wikiTitle: "Nice", nom: "Café de Turin, Nice", lat: 43.6955, lon: 7.2815 },
+                    { name: "페노키오 아이스크림", wikiTitle: "Nice", nom: "Fenocchio, Place Rossetti, Nice", lat: 43.6965, lon: 7.2768 },
+                    { name: "몬타롱 공원", wikiTitle: "Parc_du_Mont_Boron", nom: "Parc du Mont Boron, Nice", lat: 43.7085, lon: 7.2920 },
+                    { name: "생트장 해변", wikiTitle: "Saint-Jean-Cap-Ferrat", nom: "Plage de Saint-Jean-Cap-Ferrat", lat: 43.6895, lon: 7.3335 },
+                    { name: "에프루시 로스차일드", wikiTitle: "Villa_Ephrussi_de_Rothschild", nom: "Villa Ephrussi de Rothschild, Saint-Jean-Cap-Ferrat", lat: 43.6965, lon: 7.3295 },
+                    { name: "빌프랑슈 해변", wikiTitle: "Villefranche-sur-Mer", nom: "Villefranche-sur-Mer", lat: 43.7040, lon: 7.3115 },
+                    { name: "몬테카를로 (당일)", wikiTitle: "Monte_Carlo", nom: "Monte Carlo, Monaco", lat: 43.7396, lon: 7.4270 },
+                    { name: "니스 기차역", wikiTitle: "Gare_de_Nice-Ville", nom: "Gare de Nice-Ville", lat: 43.7044, lon: 7.2619 },
+                    { name: "장 메데신 거리", wikiTitle: "Nice", nom: "Avenue Jean Médecin, Nice", lat: 43.7010, lon: 7.2680 },
+                    { name: "오페라 드 니스", wikiTitle: "Opéra_de_Nice", nom: "Opéra de Nice", lat: 43.6990, lon: 7.2725 },
+                    { name: "파르크 피닉스", wikiTitle: "Parc_Phoenix", nom: "Parc Phoenix, Nice", lat: 43.6710, lon: 7.2580 }
+                ],
+                eateries: [
+                    { rank: 1, nameKo: "페노키오 (플라스 로세티)", nameEn: "Fenocchio", wikiTitle: "Nice", cat: "cafe", naverQuery: "페노키오 니스 아이스크림", note: "올드타운 아이스크림 명소. 한국 여행 블로그 필수." },
+                    { rank: 2, nameKo: "카페 드 투린", nameEn: "Café de Turin", wikiTitle: "Nice", cat: "restaurant", naverQuery: "카페 드 투린 니스 해산물", note: "항구 해산물·굴. 니스 대표 검색." },
+                    { rank: 3, nameKo: "라 메렝다", nameEn: "La Merenda", wikiTitle: "Nice", cat: "restaurant", naverQuery: "라 메렝다 니스", note: "니스 전통 요리. 예약 어려움·후기 많음." },
+                    { rank: 4, nameKo: "르 사파리", nameEn: "Le Safari", wikiTitle: "Nice", cat: "restaurant", naverQuery: "르 사파리 니스 올드타운", note: "꾸르 살레야 인근. 가성비 니스 요리." },
+                    { rank: 5, nameKo: "소카 전문 (올드타운)", nameEn: "Chez Pipo", wikiTitle: "Socca", cat: "restaurant", naverQuery: "소카 니스 Chez Pipo", note: "니스 소카(병아리콩 팬케이크). 한국인 맛집 검색 상위." },
+                    { rank: 6, nameKo: "Jan (오텔 니스)", nameEn: "Jan", wikiTitle: "Nice", cat: "restaurant", naverQuery: "Jan 니스 미슐랭", note: "현대 니스 요리·미슐랭. 예약 검색 많음." },
+                    { rank: 7, nameKo: "L'Uzine", nameEn: "L'Uzine", wikiTitle: "Nice", cat: "restaurant", naverQuery: "L Uzine 니스", note: "트렌디 비스트로. 젊은 여행자 후기." },
+                    { rank: 8, nameKo: "Peixes", nameEn: "Peixes", wikiTitle: "Nice", cat: "restaurant", naverQuery: "Peixes 니스 해산물", note: "해산물·타파스. 인스타·네이버 노출 증가." },
+                    { rank: 9, nameKo: "Le Comptoir du Marché", nameEn: "Le Comptoir du Marché", wikiTitle: "Nice", cat: "restaurant", naverQuery: "르 꽁투아르 뒤 마르쉐 니스", note: "올드타운 인기 브라세리." },
+                    { rank: 10, nameKo: "Wayne's Bar", nameEn: "Wayne's Bar", wikiTitle: "Nice", cat: "bar", naverQuery: "Waynes Bar 니스", note: "라이브·나이트. 한국 배낭여행자 언급." }
+                ]
+            }
+        };
+
+        let currentCityId = (function () {
+            const saved = localStorage.getItem(CITY_STORAGE_KEY);
+            return CITIES[saved] ? saved : 'paris';
+        })();
+
+        function getCity() { return CITIES[currentCityId]; }
+        function getSpots() { return getCity().spots; }
+        function getEateries() { return getCity().eateries; }
+        function getPlansKey() { return getCity().plansKey; }
+        function getTimelineViewKey() { return getCity().timelineViewKey; }
+        function getViewbox() { return getCity().nominatimViewbox; }
+
+        function isEiffelSrc(src) {
+            const s = src || '';
+            return s === EIFFEL_FALLBACK_IMG || s.indexOf('Tour_Eiffel') !== -1;
+        }
+
+        function applyEiffelFallback(imgEl) {
+            imgEl.src = EIFFEL_FALLBACK_IMG;
+        }
+
+        function bindImageFallback(imgEl) {
+            if (imgEl.dataset.fallbackBound === '1') return;
+            imgEl.dataset.fallbackBound = '1';
+            imgEl.addEventListener('error', function onImgError() {
+                if (isEiffelSrc(this.src)) {
+                    this.removeEventListener('error', onImgError);
+                    return;
+                }
+                applyEiffelFallback(this);
+            });
+        }
+
+        function initCardImage(imgEl) {
+            applyEiffelFallback(imgEl);
+            bindImageFallback(imgEl);
+        }
+
+        function bindAllCardImages(root) {
+            (root || document).querySelectorAll('.spot-img, .eatery-img').forEach(initCardImage);
+        }
+
+        function naverSearchUrl(query) {
+            return 'https://search.naver.com/search.naver?where=nexearch&sm=top_hty&fbm=0&ie=utf8&query=' + encodeURIComponent(query);
+        }
+
+        function updateCityUI() {
+            const c = getCity();
+            document.getElementById('headerTitle').textContent = c.headerTitle;
+            document.getElementById('spotSectionHeader').textContent = c.spotHeader;
+            document.getElementById('eaterySectionHeader').textContent = c.eateryHeader;
+            document.getElementById('chatPanelTitle').textContent = c.chatTitle;
+            document.getElementById('locSearchLabel').textContent = c.locSearchLabel;
+            document.getElementById('pLocSearch').placeholder = c.locPlaceholder;
+            const welcome = document.getElementById('chatWelcome');
+            if (welcome) welcome.textContent = c.chatWelcome;
+            document.body.classList.remove('theme-nice');
+            if (c.themeClass) document.body.classList.add(c.themeClass);
+            document.querySelectorAll('.city-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.city === currentCityId);
+            });
+        }
+
+        function switchCity(cityId) {
+            if (!CITIES[cityId] || cityId === currentCityId) return;
+            localStorage.setItem(CITY_STORAGE_KEY, cityId);
+            currentCityId = cityId;
+            plans = loadPlans();
+            timelineViewDate = localStorage.getItem(getTimelineViewKey()) || 'all';
+            eateryFilter = 'all';
+            clearPlaceSelection();
+            pLocSearch.value = '';
+            document.getElementById('planForm').reset();
+            document.getElementById('pHour').value = '10';
+            updateCityUI();
+            renderSpotGrid();
+            renderEateryFilters();
+            renderEateryList();
+            render();
+        }
+
+        (function fillHourSelect() {
+            const sel = document.getElementById('pHour');
+            for (let h = 0; h < 24; h++) {
+                const o = document.createElement('option');
+                o.value = String(h);
+                o.textContent = String(h).padStart(2, '0') + ':00';
+                if (h === 10) o.selected = true;
+                sel.appendChild(o);
+            }
+        })();
+
+        let eateryFilter = 'all';
+        function renderEateryFilters() {
+            const wrap = document.getElementById('eateryFilters');
+            const cats = [
+                { id: 'all', label: '전체' },
+                { id: 'restaurant', label: '음식점' },
+                { id: 'bar', label: '바' },
+                { id: 'cafe', label: '카페' }
+            ];
+            wrap.innerHTML = cats.map(c => `
+                <button type="button" class="filter-chip${eateryFilter === c.id ? ' active' : ''}" data-cat="${c.id}">${c.label}</button>
+            `).join('');
+            wrap.querySelectorAll('.filter-chip').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    eateryFilter = btn.dataset.cat;
+                    renderEateryFilters();
+                    renderEateryList();
+                });
+            });
+        }
+
+        async function loadEateryImage(imgEl, eatery) {
+            initCardImage(imgEl);
+            if (eatery && eatery.wikiTitle) await loadWikipediaThumb(imgEl, eatery.wikiTitle);
+        }
+
+        function renderEateryList() {
+            const list = document.getElementById('eateryList');
+            const eateries = getEateries();
+            const rows = eateries
+                .filter(e => eateryFilter === 'all' || e.cat === eateryFilter)
+                .sort((a, b) => a.rank - b.rank);
+            list.innerHTML = rows.map((e) => `
+                <div class="eatery-card" data-rank="${e.rank}">
+                    <div>
+                        <img class="eatery-img" src="${EIFFEL_FALLBACK_IMG}" data-wiki="${escapeHtml(e.wikiTitle || '')}" alt="${escapeHtml(e.nameKo)}" loading="lazy">
+                    </div>
+                    <div>
+                        <span class="rank-badge">TOP ${e.rank}</span>
+                        <span class="cat ${e.cat}">${e.cat === 'restaurant' ? '음식점' : e.cat === 'bar' ? '바' : '카페'}</span>
+                        <strong>${escapeHtml(e.nameKo)}</strong>
+                        <p style="font-size:0.75rem;color:#64748b;margin:4px 0 0;">${escapeHtml(e.nameEn)}</p>
+                        <p>${escapeHtml(e.note)}</p>
+                    </div>
+                </div>
+            `).join('');
+            bindAllCardImages(list);
+            list.querySelectorAll('.eatery-img').forEach(img => {
+                const wiki = img.getAttribute('data-wiki');
+                const eatery = eateries.find(x => x.wikiTitle === wiki);
+                loadEateryImage(img, eatery);
+                img.addEventListener('click', (ev) => {
+                    ev.preventDefault();
+                    if (eatery) window.open(naverSearchUrl(eatery.naverQuery), '_blank', 'noopener,noreferrer');
+                });
+            });
+        }
+
+        function renderSpotGrid() {
+            const spotGrid = document.getElementById('spotGrid');
+            const spots = getSpots();
+            const suffix = getCity().naverSuffix;
+            spotGrid.innerHTML = spots.map((s) => `
+            <div class="spot-card" data-spot="${escapeHtml(s.name)}">
+                <img class="spot-img" src="${EIFFEL_FALLBACK_IMG}" data-wiki="${escapeHtml(s.wikiTitle || '')}" alt="${escapeHtml(s.name)}" loading="lazy">
+                <div class="spot-info">${escapeHtml(s.name)}</div>
+                <div class="spot-actions">
+                    <button type="button" class="spot-btn spot-btn-add" data-spot="${escapeHtml(s.name)}">일정추가</button>
+                    <button type="button" class="spot-btn spot-btn-search" data-spot="${escapeHtml(s.name)}">검색</button>
+                </div>
+            </div>
+        `).join('');
+
+        bindAllCardImages(spotGrid);
+        spotGrid.querySelectorAll('.spot-img').forEach(img => {
+            const t = img.getAttribute('data-wiki');
+            if (t) loadWikipediaThumb(img, t);
+        });
+        spotGrid.querySelectorAll('.spot-btn-add').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectSpotFromPreset(btn.dataset.spot);
+                document.querySelector('.timeline-input')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+        });
+        spotGrid.querySelectorAll('.spot-btn-search').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.open(naverSearchUrl(btn.dataset.spot + ' ' + suffix), '_blank', 'noopener,noreferrer');
+            });
+        });
+        }
+
+        async function loadWikipediaThumb(imgEl, wikiTitle) {
+            initCardImage(imgEl);
+            if (!wikiTitle) return;
+            try {
+                const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiTitle.replace(/ /g, '_'))}`);
+                if (!r.ok) return;
+                const j = await r.json();
+                const thumb = j.thumbnail && j.thumbnail.source;
+                if (thumb && typeof thumb === 'string' && thumb.startsWith('http')) {
+                    imgEl.src = thumb;
+                }
+            } catch (_) { /* keep Eiffel from initCardImage */ }
+        }
+
+        let placeSearchTimer;
+        const pLocSearch = document.getElementById('pLocSearch');
+        const pLocResults = document.getElementById('pLocResults');
+
+        function clearPlaceSelection() {
+            document.getElementById('pLat').value = '';
+            document.getElementById('pLon').value = '';
+            document.getElementById('pLocLabel').value = '';
+        }
+
+        pLocSearch.addEventListener('input', () => {
+            clearPlaceSelection();
+            const q = pLocSearch.value.trim();
+            clearTimeout(placeSearchTimer);
+            if (q.length < 2) { pLocResults.classList.remove('open'); pLocResults.innerHTML = ''; return; }
+            placeSearchTimer = setTimeout(() => searchPlaces(q), 380);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.place-wrap')) pLocResults.classList.remove('open');
+        });
+
+        async function searchPlaces(q) {
+            const params = new URLSearchParams({
+                format: 'json',
+                limit: '8',
+                q,
+                viewbox: getViewbox(),
+                bounded: '1',
+                countrycodes: 'fr',
+                addressdetails: '1'
+            });
+            try {
+                const r = await fetch(`${NOMINATIM}?${params}`, {
+                    headers: { 'Accept-Language': 'ko,fr,en' }
+                });
+                if (!r.ok) throw new Error('검색 실패');
+                const arr = await r.json();
+                if (!arr.length) { pLocResults.innerHTML = '<div class="place-item">결과 없음</div>'; pLocResults.classList.add('open'); return; }
+                pLocResults.innerHTML = arr.map((it, idx) => `
+                    <div class="place-item" role="option" data-idx="${idx}">
+                        <span>${escapeHtml(it.display_name.split(',')[0] || it.display_name)}</span>
+                        <small>${escapeHtml(it.display_name)}</small>
+                    </div>
+                `).join('');
+                pLocResults._data = arr;
+                pLocResults.classList.add('open');
+                pLocResults.querySelectorAll('.place-item').forEach(el => {
+                    el.addEventListener('mousedown', (ev) => {
+                        ev.preventDefault();
+                        const it = pLocResults._data[+el.dataset.idx];
+                        if (!it) return;
+                        applyPlacePick(it);
+                    });
+                });
+            } catch {
+                pLocResults.innerHTML = '<div class="place-item">검색 오류 · 잠시 후 다시 시도</div>';
+                pLocResults.classList.add('open');
+            }
+        }
+
+        function applyPlacePick(it) {
+            document.getElementById('pLat').value = it.lat;
+            document.getElementById('pLon').value = it.lon;
+            document.getElementById('pLocLabel').value = it.display_name;
+            pLocSearch.value = it.display_name.split(',')[0] || it.display_name;
+            pLocResults.classList.remove('open');
+        }
+
+        window.selectSpotFromPreset = async (name) => {
+            const s = getSpots().find(x => x.name === name);
+            document.getElementById('pTitle').value = name + ' 방문';
+            if (!s) return;
+            pLocSearch.value = s.nom;
+            clearPlaceSelection();
+            if (s.lat != null && s.lon != null) {
+                document.getElementById('pLat').value = String(s.lat);
+                document.getElementById('pLon').value = String(s.lon);
+                document.getElementById('pLocLabel').value = s.nom;
+                return;
+            }
+            const params = new URLSearchParams({
+                format: 'json',
+                limit: '1',
+                q: s.nom,
+                viewbox: getViewbox(),
+                bounded: '0',
+                countrycodes: 'fr'
+            });
+            try {
+                const r = await fetch(`${NOMINATIM}?${params}`, { headers: { 'Accept-Language': 'ko,fr,en' } });
+                const arr = await r.json();
+                if (arr && arr[0]) applyPlacePick(arr[0]);
+            } catch (_) { /* user can search manually */ }
+        };
+
+        (function initApiKeyStorage() {
+            const apiKeyEl = document.getElementById('apiKey');
+            const saved = localStorage.getItem(GEMINI_API_KEY_STORAGE);
+            if (saved) apiKeyEl.value = saved;
+            apiKeyEl.addEventListener('blur', () => {
+                const v = apiKeyEl.value.trim();
+                if (v) localStorage.setItem(GEMINI_API_KEY_STORAGE, v);
+                else localStorage.removeItem(GEMINI_API_KEY_STORAGE);
+            });
+            document.getElementById('clearApiKeyBtn').addEventListener('click', () => {
+                localStorage.removeItem(GEMINI_API_KEY_STORAGE);
+                apiKeyEl.value = '';
+                apiKeyEl.focus();
+            });
+        })();
+
+        function getGeminiApiKey() {
+            const fromInput = document.getElementById('apiKey').value.trim();
+            if (fromInput) return fromInput;
+            return localStorage.getItem(GEMINI_API_KEY_STORAGE) || '';
+        }
+
+        function normalizePlan(p, i) {
+            const hour = p.hour != null && p.hour !== '' ? parseInt(p.hour, 10) : 12;
+            return {
+                date: p.date,
+                hour: Number.isFinite(hour) ? Math.min(23, Math.max(0, hour)) : 12,
+                title: p.title,
+                pLoc: p.pLoc,
+                lat: p.lat,
+                lon: p.lon,
+                createdAt: p.createdAt != null ? p.createdAt : Date.now() + i
+            };
+        }
+
+        function loadPlans() {
+            const key = getPlansKey();
+            let p = JSON.parse(localStorage.getItem(key) || 'null');
+            if (p && p.length) return p.map(normalizePlan);
+
+            if (currentCityId !== 'paris') return [];
+
+            const v11 = JSON.parse(localStorage.getItem('paris_plans_v11') || 'null');
+            if (v11 && v11.length) {
+                p = v11.map((x, i) => normalizePlan({ ...x, hour: 12 }, i));
+                localStorage.setItem(key, JSON.stringify(p));
+                return p;
+            }
+            const v10 = JSON.parse(localStorage.getItem('paris_plans_v10') || 'null');
+            if (v10 && v10.length) {
+                p = v10.map((x, i) => normalizePlan({
+                    date: x.date,
+                    title: x.title,
+                    pLoc: x.pLoc,
+                    lat: null,
+                    lon: null,
+                    hour: 12,
+                    createdAt: Date.now() + i
+                }, i));
+                localStorage.setItem(key, JSON.stringify(p));
+                return p;
+            }
+            return [];
+        }
+
+        let plans = loadPlans();
+        let timelineViewDate = localStorage.getItem(getTimelineViewKey()) || 'all';
+
+        function uniqueDatesFromPlans() {
+            const set = new Set(plans.map(p => p.date).filter(Boolean));
+            return [...set].sort();
+        }
+
+        function sortPlans(arr) {
+            return [...arr].sort((a, b) => {
+                const d = a.date.localeCompare(b.date);
+                if (d !== 0) return d;
+                const ha = a.hour != null ? +a.hour : 12;
+                const hb = b.hour != null ? +b.hour : 12;
+                if (ha !== hb) return ha - hb;
+                return (a.createdAt || 0) - (b.createdAt || 0);
+            });
+        }
+
+        function plansForCurrentView() {
+            if (timelineViewDate === 'all') return sortPlans(plans);
+            return sortPlans(plans.filter(p => p.date === timelineViewDate));
+        }
+
+        function renderDateTabs() {
+            const wrap = document.getElementById('dateTabs');
+            const dates = uniqueDatesFromPlans();
+            const chips = [
+                `<button type="button" class="date-chip${timelineViewDate === 'all' ? ' active' : ''}" data-date="all">전체</button>`
+            ].concat(dates.map(d => `
+                <button type="button" class="date-chip${timelineViewDate === d ? ' active' : ''}" data-date="${escapeHtml(d)}">${escapeHtml(d)}</button>
+            `));
+            wrap.innerHTML = chips.join('');
+            wrap.querySelectorAll('.date-chip').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    timelineViewDate = btn.dataset.date;
+                    localStorage.setItem(getTimelineViewKey(), timelineViewDate);
+                    renderDateTabs();
+                    render();
+                });
+            });
+        }
+
+        function haversineKm(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const toR = x => x * Math.PI / 180;
+            const dLat = toR(lat2 - lat1);
+            const dLon = toR(lon2 - lon1);
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(toR(lat1)) * Math.cos(toR(lat2)) * Math.sin(dLon / 2) ** 2;
+            return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+        }
+
+        function estimateTransitMinutes(km) {
+            return Math.max(8, Math.round(10 + km * 3.2 + Math.min(18, km * 1.5)));
+        }
+
+        function mapsTransitUrl(a, b) {
+            const hasA = a.lat != null && a.lon != null && String(a.lat) !== '' && String(a.lon) !== '';
+            const hasB = b.lat != null && b.lon != null && String(b.lat) !== '' && String(b.lon) !== '';
+            if (hasA && hasB) {
+                return `https://www.google.com/maps/dir/?api=1&travelmode=transit&origin=${encodeURIComponent(a.lat + ',' + a.lon)}&destination=${encodeURIComponent(b.lat + ',' + b.lon)}`;
+            }
+            return `https://www.google.com/maps/dir/?api=1&travelmode=transit&origin=${encodeURIComponent(a.pLoc || '')}&destination=${encodeURIComponent(b.pLoc || '')}`;
+        }
+
+        function resolveLegMinutesSync(prev, cur) {
+            if (prev.lat != null && prev.lon != null && cur.lat != null && cur.lon != null) {
+                const km = haversineKm(+prev.lat, +prev.lon, +cur.lat, +cur.lon);
+                return { minutes: estimateTransitMinutes(km), source: 'estimate' };
+            }
+            return { minutes: null, source: 'estimate' };
+        }
+
+        function formatHour(h) {
+            const n = h != null ? parseInt(h, 10) : 12;
+            const v = Number.isFinite(n) ? Math.min(23, Math.max(0, n)) : 12;
+            return String(v).padStart(2, '0') + ':00';
+        }
+
+        const render = () => {
+            const dates = uniqueDatesFromPlans();
+            if (timelineViewDate !== 'all' && dates.length && !dates.includes(timelineViewDate)) {
+                timelineViewDate = 'all';
+                localStorage.setItem(getTimelineViewKey(), 'all');
+            }
+            renderDateTabs();
+            const sorted = plansForCurrentView();
+            const list = document.getElementById('timelineList');
+            const chunks = ['<div class="milestone-track">'];
+            sorted.forEach((p, idx) => {
+                if (idx > 0) {
+                    const prev = sorted[idx - 1];
+                    const href = mapsTransitUrl(prev, p);
+                    const { minutes } = resolveLegMinutesSync(prev, p);
+                    const legText = minutes != null ? `약 ${minutes}분` : '이동';
+                    chunks.push(`<div class="milestone-connector"><span class="milestone-arrow">→</span><a href="${href}" class="milestone-leg-link" target="_blank" rel="noopener noreferrer">${legText}</a></div>`);
+                }
+                const realIndex = plans.indexOf(p);
+                const shortLoc = (p.pLoc || '').split(',')[0];
+                const shortTitle = (p.title || '').length > 14 ? (p.title || '').slice(0, 14) + '…' : (p.title || '');
+                chunks.push(`<div class="milestone-node"><button type="button" class="milestone-del" onclick="del(${realIndex})" title="삭제">✕</button><span class="milestone-time">🕐 ${formatHour(p.hour)}</span><strong class="milestone-title">${escapeHtml(shortTitle)}</strong><span class="milestone-loc" title="${escapeHtml(p.pLoc || '')}">${escapeHtml(shortLoc)}</span></div>`);
+            });
+            if (!sorted.length) {
+                list.innerHTML = `<p class="hint milestone-empty">${timelineViewDate === 'all' ? '일정이 없습니다.' : '이 날짜에 저장된 일정이 없습니다.'}</p>`;
+            } else {
+                chunks.push('</div>');
+                list.innerHTML = chunks.join('');
+            }
+            localStorage.setItem(getPlansKey(), JSON.stringify(plans));
+        };
+
+        function escapeHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s == null ? '' : String(s);
+            return d.innerHTML;
+        }
+
+        document.getElementById('planForm').onsubmit = (e) => {
+            e.preventDefault();
+            const lat = document.getElementById('pLat').value.trim();
+            const lon = document.getElementById('pLon').value.trim();
+            const label = document.getElementById('pLocLabel').value.trim();
+            if (!label || !lat || !lon) {
+                alert('검색 결과에서 장소를 선택해 주세요. (목록에서 항목 클릭)');
+                return;
+            }
+            plans.push({
+                date: document.getElementById('pDate').value,
+                hour: parseInt(document.getElementById('pHour').value, 10),
+                title: document.getElementById('pTitle').value,
+                pLoc: label,
+                lat,
+                lon,
+                createdAt: Date.now()
+            });
+            render();
+            e.target.reset();
+            clearPlaceSelection();
+            pLocSearch.value = '';
+            document.getElementById('pHour').value = '10';
+        };
+
+        window.del = (i) => { plans.splice(i, 1); render(); };
+
+        function extractGeminiText(data) {
+            if (data.error) {
+                const m = data.error.message || data.error.status || JSON.stringify(data.error);
+                throw new Error(m);
+            }
+            const cand = data.candidates && data.candidates[0];
+            if (!cand) {
+                const pb = data.promptFeedback;
+                if (pb && pb.blockReason) throw new Error('프롬프트 차단: ' + pb.blockReason);
+                throw new Error('모델 응답에 candidates가 없습니다. API 키·과금·제한을 확인하세요.');
+            }
+            const parts = cand.content && cand.content.parts;
+            if (!parts || !parts.length) {
+                const reason = cand.finishReason || 'UNKNOWN';
+                throw new Error('텍스트가 없습니다. finishReason: ' + reason);
+            }
+            const text = parts.map(pt => (pt && pt.text) ? pt.text : '').join('');
+            if (!text.trim()) throw new Error('빈 텍스트 응답입니다. finishReason: ' + (cand.finishReason || '—'));
+            return text;
+        }
+
+        const FALLBACK_MODELS = ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b'];
+
+        async function generateWithGemini(apiKey, userText, preferredModel) {
+            const ordered = [preferredModel, ...FALLBACK_MODELS.filter(m => m !== preferredModel)];
+            let lastErr = '';
+            for (const model of ordered) {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+                const body = {
+                    contents: [{ role: 'user', parts: [{ text: userText + '\n\n(현재 여행 도시: ' + getCity().geminiContext + '. 한국어로 답변해줘.)' }] }],
+                    generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+                };
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                let data;
+                try {
+                    data = await res.json();
+                } catch (err) {
+                    lastErr = 'JSON 파싱 실패: ' + err.message;
+                    continue;
+                }
+                if (!res.ok) {
+                    lastErr = data.error && data.error.message ? data.error.message : ('HTTP ' + res.status);
+                    if (res.status === 404 && lastErr.includes('model')) continue;
+                    throw new Error(lastErr);
+                }
+                try {
+                    return { text: extractGeminiText(data), modelUsed: model };
+                } catch (err) {
+                    lastErr = err.message;
+                }
+            }
+            throw new Error(lastErr || '사용 가능한 모델이 없습니다.');
+        }
+
+        document.getElementById('chatInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askAI(); }
+        });
+
+        window.askAI = async () => {
+            const apiKey = getGeminiApiKey();
+            const input = document.getElementById('chatInput');
+            const q = input.value.trim();
+            if (!q) return;
+            if (!apiKey) { alert('API 키를 먼저 입력해주세요!'); return; }
+            const preferredModel = document.getElementById('modelSelect').value;
+            const hist = document.getElementById('chatHist');
+            hist.innerHTML += `<div class="msg user">${escapeHtml(q)}</div>`;
+            input.value = '';
+            hist.scrollTop = hist.scrollHeight;
+            const loading = document.createElement('div');
+            loading.className = 'msg ai';
+            loading.innerText = '생각 중...';
+            hist.appendChild(loading);
+            try {
+                const { text, modelUsed } = await generateWithGemini(apiKey, q, preferredModel);
+                const rawKey = document.getElementById('apiKey').value.trim();
+                if (rawKey) localStorage.setItem(GEMINI_API_KEY_STORAGE, rawKey);
+                if (modelUsed !== preferredModel) {
+                    loading.innerHTML = marked.parse('_(모델: ' + escapeHtml(modelUsed) + ')_\n\n' + text);
+                } else {
+                    loading.innerHTML = marked.parse(text);
+                }
+            } catch (err) {
+                loading.innerText = '오류: ' + (err && err.message ? err.message : String(err));
+            }
+            hist.scrollTop = hist.scrollHeight;
+        };
+
+        (function initChatPanel() {
+            const fab = document.getElementById('chatFab');
+            const panel = document.getElementById('aiChatPanel');
+            const closeBtn = document.getElementById('chatPanelClose');
+            if (!fab || !panel) return;
+            fab.addEventListener('click', () => {
+                const willOpen = panel.hidden;
+                panel.hidden = !willOpen;
+                fab.classList.toggle('open', willOpen);
+                fab.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+            });
+            closeBtn.addEventListener('click', () => {
+                panel.hidden = true;
+                fab.classList.remove('open');
+                fab.setAttribute('aria-expanded', 'false');
+            });
+        })();
+
+        document.querySelectorAll('.city-btn').forEach(btn => {
+            btn.addEventListener('click', () => switchCity(btn.dataset.city));
+        });
+        updateCityUI();
+        renderSpotGrid();
+        renderEateryFilters();
+        renderEateryList();
+        render();
+    </script>
 </body>
 </html>
